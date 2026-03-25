@@ -3,20 +3,18 @@ package com.kkllffaa.meteor_litematica_printer;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import net.minecraft.world.item.Items; // Specific official mapping path
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Meteor Litematica Printer");
     
-    // We use a generic category here to ensure it compiles
+    // Simplest version to ensure compilation
     public static final Category CATEGORY = new Category("Printer");
 
     @Override
     public void onInitialize() {
         LOG.info("Initializing Meteor Litematica Printer with Spectator Plus");
-
         Modules.get().add(new Printer());
         Modules.get().add(new SpectatorModule());
     }
