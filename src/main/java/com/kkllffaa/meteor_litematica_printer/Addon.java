@@ -9,14 +9,18 @@ import org.slf4j.LoggerFactory;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Meteor Litematica Printer");
-    // This line fixes the "cannot find symbol CATEGORY" error
+    
+    // THIS LINE IS CRITICAL: It fixes the Printer.java error you got!
     public static final Category CATEGORY = new Category("Printer", Items.ORANGE_CONCRETE.getDefaultStack());
 
     @Override
     public void onInitialize() {
         LOG.info("Initializing Meteor Litematica Printer with Spectator Plus");
 
+        // Registers the original printer
         Modules.get().add(new Printer());
+        
+        // Registers your new spectator module
         Modules.get().add(new SpectatorModule());
     }
 
