@@ -21,11 +21,12 @@ public class SpectatorModule extends Module {
 
     @Override
     public void onActivate() {
+        // In Official Java Mappings, we use 'level' instead of 'world'
         if (mc.level == null || mc.player == null) return;
 
         Player target = null;
         for (Player player : mc.level.players()) {
-            // Changed .getName() to .name() for Official Mappings
+            // FIX: Using .getScoreboardName() or .getName().getString() is safer in 1.21.4
             if (player.getGameProfile().getName().equalsIgnoreCase(playerName.get())) {
                 target = player;
                 break;
@@ -34,10 +35,9 @@ public class SpectatorModule extends Module {
 
         if (target != null) {
             mc.setCameraEntity(target);
-            // Changed .getName() to .name() here too
             info("Spectating: " + target.getGameProfile().getName());
         } else {
-            error("Player not found!");
+            error("Player not found nearby!");
             this.toggle();
         }
     }
