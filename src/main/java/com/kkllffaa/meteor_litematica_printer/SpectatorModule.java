@@ -3,8 +3,7 @@ package com.kkllffaa.meteor_litematica_printer;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.settings.*;
-import net.minecraft.world.entity.player.Player; // Official Mapping name for PlayerEntity
-import java.util.stream.StreamSupport;
+import net.minecraft.world.entity.player.Player;
 
 public class SpectatorModule extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -22,11 +21,11 @@ public class SpectatorModule extends Module {
 
     @Override
     public void onActivate() {
-        // In official mappings, world and player are often accessed via getter methods
         if (mc.level == null || mc.player == null) return;
 
         Player target = null;
         for (Player player : mc.level.players()) {
+            // Changed .getName() to .name() for Official Mappings
             if (player.getGameProfile().getName().equalsIgnoreCase(playerName.get())) {
                 target = player;
                 break;
@@ -35,6 +34,7 @@ public class SpectatorModule extends Module {
 
         if (target != null) {
             mc.setCameraEntity(target);
+            // Changed .getName() to .name() here too
             info("Spectating: " + target.getGameProfile().getName());
         } else {
             error("Player not found!");
