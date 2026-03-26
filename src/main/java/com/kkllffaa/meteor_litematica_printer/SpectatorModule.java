@@ -1,12 +1,13 @@
 package com.kkllffaa.meteor_litematica_printer;
 
-import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.events.render.RenderTooltipEvent;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.ItemStack;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.item.ItemStack;
 
 public class SpectatorModule extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -18,13 +19,13 @@ public class SpectatorModule extends Module {
     @EventHandler
     private void onRenderTooltip(RenderTooltipEvent event) {
         GuiGraphics graphics = event.graphics;
-        ClientPlayerEntity player = mc.player;
+        LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
 
         for (ItemStack armor : player.getInventory().armor) {
             if (!armor.isEmpty()) {
                 graphics.drawItem(armor, event.x, event.y);
-                graphics.renderTooltip(graphics.getFont(), armor.getTooltipLines(player, null), event.x, event.y, null);
+                graphics.renderTooltip(event.textRenderer(), armor.getTooltipLines(player, null), event.x, event.y, null);
             }
         }
     }
