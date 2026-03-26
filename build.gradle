@@ -5,43 +5,31 @@ plugins {
 
 group = 'com.kkllffaa'
 version = '1.0.0'
-
-base {
-    archivesName = 'meteor-spectator-plus'
-}
+archivesBaseName = 'meteor-spectator-plus'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
-    withJavadocJar()
     withSourcesJar()
+    withJavadocJar()
 }
 
 repositories {
     mavenCentral()
-    maven {
-        name = 'Leste Maven'
-        url = 'https://maven.leste.org/releases'
-    }
-    maven {
-        name = 'Meteor Maven'
-        url = 'https://maven.meteordev.org/releases'
-    }
-    maven {
-        name = 'Meteor Snapshots'
-        url = 'https://maven.meteordev.org/snapshots'
-    }
-    maven { url = 'https://jitpack.io' }
+    maven { url = 'https://maven.meteordev.org/releases' }
+    maven { url = 'https://maven.meteordev.org/snapshots' }
 }
 
 dependencies {
-    // Minecraft & mappings
+    // Minecraft + mappings
     minecraft 'com.mojang:minecraft:1.21.4'
     mappings loom.officialMojangMappings()
+    
+    // Fabric Loader
     modImplementation 'net.fabricmc:fabric-loader:0.15.2'
 
-    // Meteor Client API
-    modImplementation 'meteordevelopment:meteor-client:1.10.0'
+    // Meteor Client (SNAPSHOT for 1.21.4)
+    modImplementation "meteordevelopment:meteor-client:1.21.4-SNAPSHOT"
 }
 
 loom {
@@ -57,19 +45,15 @@ loom {
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
+tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
-    options.release.set(21)
+    options.release = 21
 }
 
 tasks.register('printVersion') {
-    doLast {
-        println("Mod version: $version")
-    }
+    doLast { println(project.version) }
 }
 
 tasks.register('printMCVersion') {
-    doLast {
-        println("Minecraft version: 1.21.4")
-    }
+    doLast { println('1.21.4') }
 }
