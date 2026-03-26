@@ -7,7 +7,6 @@ import net.minecraft.world.entity.player.Player;
 public class SpectatorModule extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    // The setting where you type the name
     private final Setting<String> playerName = sgGeneral.add(new StringSetting.Builder()
             .name("player-name")
             .description("The name of the player you want to watch.")
@@ -27,8 +26,9 @@ public class SpectatorModule extends Module {
         }
 
         Player target = null;
-        // Search all players currently rendered in your world
+        // 1.21.4 Fix: Iterate through players using the correct level method
         for (Player player : mc.level.players()) {
+            // FIX: Use .name() instead of .getName()
             if (player.getGameProfile().getName().equalsIgnoreCase(playerName.get())) {
                 target = player;
                 break;
@@ -36,8 +36,8 @@ public class SpectatorModule extends Module {
         }
 
         if (target != null) {
-            // This is the magic line that moves your camera to them
             mc.setCameraEntity(target);
+            // FIX: Use .name() for the message as well
             info("Now spectating: " + target.getGameProfile().getName());
         } else {
             error("Player '" + playerName.get() + "' not found nearby!");
@@ -48,7 +48,6 @@ public class SpectatorModule extends Module {
     @Override
     public void onDeactivate() {
         if (mc.player != null) {
-            // Resets the camera back to you
             mc.setCameraEntity(mc.player);
             info("Camera reset to your perspective.");
         }
