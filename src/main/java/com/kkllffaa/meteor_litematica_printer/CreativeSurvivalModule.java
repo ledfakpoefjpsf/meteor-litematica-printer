@@ -5,14 +5,21 @@ import meteordevelopment.meteorclient.systems.modules.ModuleType;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.Identifier;
+import net.minecraft.registry.Registries;
+import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.util.InputUtil;
 
 public class CreativeSurvivalModule extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    // ----- Checkboxes -----
+    // -----------------------------
+    // TOGGLE SETTINGS (checkboxes)
+    // -----------------------------
     private final Setting<Boolean> flyEnabled = sgGeneral.add(new BoolSetting.Builder()
             .name("fly")
             .description("Enable flying")
@@ -49,10 +56,30 @@ public class CreativeSurvivalModule extends Module {
             .defaultValue(false)
             .build());
 
-    // ----- Optional Keybinds -----
+    // -----------------------------
+    // ITEM SPAWN SETTINGS
+    // -----------------------------
+    private final Setting<Item> itemToSpawn = sgGeneral.add(new ItemSetting.Builder()
+            .name("item-to-spawn")
+            .description("Select any item/block to spawn.")
+            .defaultValue(Items.DIAMOND)
+            .build());
+
+    private final Setting<Integer> spawnAmount = sgGeneral.add(new IntSetting.Builder()
+            .name("spawn-amount")
+            .description("How many items to spawn at once")
+            .defaultValue(64)
+            .min(1)
+            .max(999)
+            .sliderMax(64)
+            .build());
+
+    // -----------------------------
+    // OPTIONAL KEYBINDS
+    // -----------------------------
     private final Setting<KeybindSetting> spawnItemKey = sgGeneral.add(new KeybindSetting.Builder()
             .name("spawn-item-key")
-            .description("Key to spawn a stack of items")
+            .description("Key to spawn selected item")
             .defaultValue(new KeybindSetting(InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, false))
             .build());
 
@@ -63,12 +90,14 @@ public class CreativeSurvivalModule extends Module {
             .build());
 
     public CreativeSurvivalModule() {
-        super(ModuleType.Player, "creative-survival", "Ultimate creative powers in survival with GUI toggles");
+        super(ModuleType.Player, "creative-survival", "Ultimate creative powers in survival (Vanish, Godmode, Enchants, Fly, Spawn Items)");
     }
 
     @Override
     public void onTick() {
-        // Fly
+        // -----------------------------
+        // FLY
+        // -----------------------------
         if (flyEnabled.get()) {
             mc.player.getAbilities().flying = true;
             mc.player.getAbilities().allowFlying = true;
@@ -76,24 +105,40 @@ public class CreativeSurvivalModule extends Module {
             mc.player.getAbilities().flying = false;
         }
 
-        // Instant break
+        // -----------------------------
+        // INSTANT BREAK
+        // -----------------------------
         if (instaBreakEnabled.get()) PlayerUtils.breakBlockInstant();
 
-        // Spawn items
+        // -----------------------------
+        // SPAWN ITEMS
+        // -----------------------------
         if (spawnItemsEnabled.get() || spawnItemKey.get().isPressed()) {
-            mc.player.getInventory().insertStack(Items.DIAMOND.getDefaultStack());
+            Item selected = itemToSpawn.get();
+            int amount = spawnAmount.get();
+            if (selected != null) {
+                for (int i = 0; i < amount; i++) {
+                    mc.player.getInventory().insertStack(selected.getDefaultStack());
+                }
+            }
         }
 
-        // Vanish
+        // -----------------------------
+        // VANISH
+        // -----------------------------
         mc.player.setInvisible(vanishEnabled.get());
 
-        // Godmode
+        // -----------------------------
+        // GODMODE
+        // -----------------------------
         if (godmodeEnabled.get()) {
             mc.player.setHealth(mc.player.getMaxHealth());
             mc.player.getHungerManager().setFoodLevel(20);
         }
 
-        // Over-enchant
+        // -----------------------------
+        // OVER-ENCHANT
+        // -----------------------------
         if (overEnchantEnabled.get() || enchantKey.get().wasPressed()) {
             ItemStack stack = mc.player.getMainHandStack();
             if (!stack.isEmpty()) enchantItem(stack, 3000); // Sharpness 3000 example
