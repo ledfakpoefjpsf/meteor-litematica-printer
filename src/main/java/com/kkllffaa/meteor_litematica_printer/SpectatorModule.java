@@ -4,34 +4,26 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class SpectatorModule extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<String> playerName = sgGeneral.add(new StringSetting.Builder()
             .name("player-name")
-            .description("Target player to track infinitely.")
+            .description("Target to spy on.")
             .defaultValue("")
             .build()
     );
 
-    // Keep track of the last known position for "Infinite" tracking
-    private Vec3 lastPos = null;
-
     public SpectatorModule() {
-        super(Addon.CATEGORY, "spectator-plus", "Infinite range tracking and spectating.");
+        super(Addon.CATEGORY, "spectator-plus", "Spy on player gear and tooltips.");
     }
 
-    @Override
-    public void onActivate() {
-        lastPos = null;
-    }
-
-    @Override
-    public void onTick() {
-        if (mc.level == null) return;
+    // This method handles drawing the items on your screen
+    public void onRender(GuiGraphics graphics) {
+        if (mc.level == null || !isActive()) return;
 
         Player target = null;
         for (Player player : mc.level.players()) {
@@ -42,26 +34,39 @@ public class SpectatorModule extends Module {
         }
 
         if (target != null) {
-            // Update last known position
-            lastPos = target.position();
-            
-            // Force the camera to lock
-            if (mc.getCameraEntity() != target) {
-                mc.setCameraEntity(target);
+            int x = mc.getWindow().getGuiScaledWidth() / 2 + 100;
+            int y = mc.getWindow().getGuiScaledHeight() / 2 - 50;
+
+            // Draw Main Hand
+            drawItem(graphics, target.getMainHandItem(), x, y, "Hand");
+            // Draw Armor pieces
+            int offset = 20;
+            for (ItemStack armor : target.getArmorSlots()) {
+                drawItem(graphics, armor, x, y + offset, "");
+                offset += 20;
             }
-        } else if (lastPos != null) {
-            // INFINITE RENDER LOGIC: 
-            // If the player vanishes (out of range), we point the camera at their last spot
-            info("Target out of range! Last seen at: " + 
-                (int)lastPos.x + ", " + (int)lastPos.y + ", " + (int)lastPos.z);
+        }
+    }
+
+    private void drawItem(GuiGraphics graphics, ItemStack stack, int x, int y, String label) {
+        if (stack.isEmpty()) return;
+        
+        // Render the actual item icon
+        graphics.renderItem(stack, x, y);
+        graphics.renderItemDecorations(mc.font, stack, x, y);
+
+        // Check if your mouse is hovering over this icon
+        double mouseX = mc.mouseHandler.x() * (double)mc.getWindow().getGuiScaledWidth() / (double)mc.getWindow().getWidth();
+        double mouseY = mc.mouseHandler.y() * (double)mc.getWindow().getGuiScaledHeight() / (double)mc.getWindow().getHeight();
+
+        if (mouseX >= x && mouseX <= x + 16 && mouseY >= y && mouseY <= y + 16) {
+            // This is the "Magic": It shows the full Skyblock tooltip (Tier, Enchants, etc.)
+            graphics.renderTooltip(mc.font, stack, (int)mouseX, (int)mouseY);
         }
     }
 
     @Override
     public void onDeactivate() {
-        if (mc.player != null) {
-            mc.setCameraEntity(mc.player);
-            info("Spectator disabled.");
-        }
+        if (mc.player != null) mc.setCameraEntity(mc.player);
     }
 }
