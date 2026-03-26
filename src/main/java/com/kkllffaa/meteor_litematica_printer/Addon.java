@@ -9,17 +9,14 @@ import org.slf4j.LoggerFactory;
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LoggerFactory.getLogger("Spectator Plus");
     
-    // This creates the category in your ClickGUI
+    // This creates the "Custom" tab in your Meteor ClickGUI
     public static final Category CATEGORY = new Category("Custom");
 
     @Override
     public void onInitialize() {
-        LOG.info("Initializing Spectator Plus...");
+        LOG.info("Initializing Spectator Plus Addon...");
         
-        // We COMMENTED OUT the printer so it doesn't cause errors
-        // Modules.get().add(new Printer());
-        
-        // We only add your new Spectator module
+        // Load the spectator logic
         Modules.get().add(new SpectatorModule());
     }
 
