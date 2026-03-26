@@ -1,53 +1,55 @@
 plugins {
-    id 'fabric-loom' version "${loom_version}"
+    id 'fabric-loom' version '1.15.5'
+    id 'java'
 }
 
-version = project.mod_version
-group = project.maven_group
+group = 'com.kkllffaa'
+version = '1.0.0'
+archivesBaseName = 'meteor-spectator-plus'
 
-base {
-    archivesName = project.archives_base_name
-}
-
-java {
-    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_21
-}
+sourceCompatibility = '21'
+targetCompatibility = '21'
 
 repositories {
     mavenCentral()
-    maven { url = "https://maven.meteordev.org/releases" }
-    maven { url = "https://maven.meteordev.org/snapshots" }
-    maven { url = 'https://jitpack.io' }
+    maven {
+        name = 'Leste Maven'
+        url = 'https://maven.leste.org/releases'
+    }
+    maven {
+        name = 'Meteor Maven'
+        url = 'https://maven.meteorclient.dev'
+    }
 }
 
 dependencies {
-    // Minecraft
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    minecraft 'com.mojang:minecraft:1.21.4'
+    mappings 'net.fabricmc:yarn:1.21.4+build.7:v2'
+    modImplementation 'net.fabricmc:fabric-loader:0.15.2'
 
-    // Meteor Client
-    modImplementation "meteordevelopment:meteor-client:${project.minecraft_version}-SNAPSHOT"
+    // Meteor Client API
+    modImplementation 'meteordevelopment:meteor-client:1.10.0'
 }
 
-processResources {
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version, "mc_version": project.minecraft_version
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+loom {
+    runConfigs {
+        client {
+            name = 'Fabric Client'
+            runDir = 'run'
+        }
+        server {
+            name = 'Fabric Server'
+            runDir = 'run-server'
+        }
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    it.options.encoding = "UTF-8"
-}
-
-tasks.register('printVersion') {
-    doLast {
-        println(project.version)
-    }
-}
-
-tasks.register('printMCVersion') {
-    doLast {
-        println(project.minecraft_version)
-    }
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.release = 21
 }
