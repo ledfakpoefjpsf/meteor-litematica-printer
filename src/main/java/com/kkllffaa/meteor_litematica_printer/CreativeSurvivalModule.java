@@ -1,6 +1,7 @@
 package com.kkllffaa.meteor_litematica_printer;
 
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.KeyBindSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -22,14 +23,14 @@ public class CreativeSurvivalModule extends Module {
         .build()
     );
 
-    private final Setting<KeyBinding> spawnItemKey = sgGeneral.add(new KeyBindingSetting.Builder()
+    private final Setting<KeyBinding> spawnItemKey = sgGeneral.add(new KeyBindSetting.Builder()
         .name("spawn-key")
         .description("Key to spawn the item.")
         .defaultValue(new KeyBinding("Spawn Item", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, "CreativeSurvival"))
         .build()
     );
 
-    private final Setting<KeyBinding> enchantKey = sgGeneral.add(new KeyBindingSetting.Builder()
+    private final Setting<KeyBinding> enchantKey = sgGeneral.add(new KeyBindSetting.Builder()
         .name("enchant-key")
         .description("Key to enchant held item.")
         .defaultValue(new KeyBinding("Enchant Item", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_E, "CreativeSurvival"))
@@ -53,12 +54,18 @@ public class CreativeSurvivalModule extends Module {
             }
         }
 
-        // Enchant held item
+        // Enchant held item safely
         if (enchantKey.get().wasPressed()) {
             ItemStack stack = player.getMainHandStack();
             if (!stack.isEmpty()) {
-                EnchantmentHelper.setLevel(EnchantmentHelper.get(stack).keySet().iterator().next(), stack, 5);
-                ChatUtils.info("Enchanted " + stack.getName().getString());
+                var enchants = EnchantmentHelper.get(stack);
+                if (!enchants.isEmpty()) {
+                    var firstEnchant = enchants.keySet().iterator().next();
+                    EnchantmentHelper.setLevel(firstEnchant, stack, 5);
+                    ChatUtils.info("Enchanted " + stack.getName().getString());
+                } else {
+                    ChatUtils.info("No enchantments available for this item.");
+                }
             }
         }
     }
