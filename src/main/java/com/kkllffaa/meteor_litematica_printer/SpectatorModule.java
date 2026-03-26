@@ -26,10 +26,9 @@ public class SpectatorModule extends Module {
         }
 
         Player target = null;
-        // Looking through nearby players
+
         for (Player player : mc.level.players()) {
-            // FIX: Using .name() instead of .getName() for 1.21.4 Official Mappings
-            if (player.getGameProfile().getName().equalsIgnoreCase(playerName.get())) {
+            if (player.getName().getString().equalsIgnoreCase(playerName.get())) {
                 target = player;
                 break;
             }
@@ -37,8 +36,7 @@ public class SpectatorModule extends Module {
 
         if (target != null) {
             mc.setCameraEntity(target);
-            // FIX: Using .name() here as well
-            info("Now spectating: " + target.getGameProfile().getName());
+            info("Now spectating: " + target.getName().getString());
         } else {
             error("Player '" + playerName.get() + "' not found nearby!");
             this.toggle();
