@@ -12,6 +12,15 @@ import net.minecraft.client.player.LocalPlayer;
 public class Fly extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
+        .name("speed")
+        .description("Master speed multiplier for fly movement.")
+        .defaultValue(1.0)
+        .min(0.1)
+        .sliderMax(10.0)
+        .build()
+    );
+
     private final Setting<Double> horizontalSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("horizontal-speed")
         .description("Horizontal fly speed.")
@@ -66,8 +75,9 @@ public class Fly extends Module {
         p.setOnGround(false);
         p.fallDistance = 0.0f;
 
-        double h = horizontalSpeed.get();
-        double v = verticalSpeed.get();
+        double multiplier = speed.get();
+        double h = horizontalSpeed.get() * multiplier;
+        double v = verticalSpeed.get() * multiplier;
 
         double vy = 0.0;
         if (mc.options.keyJump.isDown()) vy += v;
@@ -75,18 +85,19 @@ public class Fly extends Module {
 
         double forward = 0.0;
         double strafe = 0.0;
-        if (mc.options.keyUp.isDown()) forward += 1.0;
-        if (mc.options.keyDown.isDown()) forward -= 1.0;
-        if (mc.options.keyLeft.isDown()) strafe += 1.0;
-        if (mc.options.keyRight.isDown()) strafe -= 1.0;
+
+        if (mc.options.keyUp.isDown()) forward += 1.0;     // W
+        if (mc.options.keyDown.isDown()) forward -= 1.0;   // S
+        if (mc.options.keyLeft.isDown()) strafe -= 1.0;    // A
+        if (mc.options.keyRight.isDown()) strafe += 1.0;   // D
 
         if (forward != 0.0 || strafe != 0.0) {
             double yaw = Math.toRadians(p.getYRot());
             double sin = Math.sin(yaw);
             double cos = Math.cos(yaw);
 
-            double mx = (forward * cos - strafe * sin) * h;
-            double mz = (forward * sin + strafe * cos) * h;
+            double mx = (forward * -sin + strafe * cos) * h;
+            double mz = (forward *  cos + strafe * sin) * h;
             p.setDeltaMovement(mx, vy, mz);
         } else {
             double idleY = (antiKick.get() && !mc.options.keyJump.isDown() && !mc.options.keyShift.isDown()) ? -0.04 : 0.0;
