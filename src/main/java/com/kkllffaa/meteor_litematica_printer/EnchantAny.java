@@ -24,7 +24,8 @@ public class EnchantAny extends Module {
         .description("Enchantment level to apply.")
         .defaultValue(10)
         .min(1)
-        .sliderMax(255)
+        .sliderMax(30000)
+        .max(30000)
         .build()
     );
 
