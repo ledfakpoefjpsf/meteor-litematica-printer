@@ -1,31 +1,34 @@
 package com.kkllffaa.meteor_litematica_printer;
 
-import meteordevelopment.meteorclient.events.render.RenderTooltipEvent;
+import meteordevelopment.meteorclient.events.render.Render2DEvent;
 import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.item.ItemStack;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.item.ItemStack;
 
 public class SpectatorModule extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     public SpectatorModule() {
-        super(meteordevelopment.meteorclient.systems.modules.Category.Render, "spectator-module", "Show tooltip on armor in spectator mode.");
+        super(Categories.Render, "spectator-module", "Show armor items on HUD in spectator mode.");
     }
 
     @EventHandler
-    private void onRenderTooltip(RenderTooltipEvent event) {
-        GuiGraphics graphics = event.graphics;
+    private void onRender2D(Render2DEvent event) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
+        if (!player.isSpectator()) return;
 
-        for (ItemStack armor : player.getInventory().armor) {
+        int x = 5;
+        int y = 5;
+        for (int i = 3; i >= 0; i--) {
+            ItemStack armor = player.getInventory().armor.get(i);
             if (!armor.isEmpty()) {
-                graphics.drawItem(armor, event.x, event.y);
-                graphics.renderTooltip(event.textRenderer(), armor.getTooltipLines(player, null), event.x, event.y, null);
+                mc.gameRenderer.itemRenderer.renderGuiItem(armor, x, y);
+                x += 20;
             }
         }
     }
