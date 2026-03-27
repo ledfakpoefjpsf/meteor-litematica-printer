@@ -1,13 +1,12 @@
 package com.kkllffaa.meteor_litematica_printer;
 
+import meteordevelopment.meteorclient.events.game.OpenScreenEvent;
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
-import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.ClickType;
 
@@ -50,12 +49,15 @@ public class CoinFlip extends Module {
     }
 
     @EventHandler
-    private void onPacket(PacketEvent.Receive event) {
-        if (!(event.packet instanceof ClientboundOpenScreenPacket packet)) return;
+    private void onOpenScreen(OpenScreenEvent event) {
+        if (event.screen == null) return;
 
-        String title = packet.getTitle().getString();
+        String title = "";
+        if (event.screen instanceof AbstractContainerScreen<?> screen) {
+            title = screen.getTitle().getString();
+        }
 
-        // Debug - print every GUI title to chat
+        // Debug
         if (mc.player != null) {
             mc.player.displayClientMessage(
                 Component.literal("§eGUI opened: §f" + title), false
@@ -65,6 +67,7 @@ public class CoinFlip extends Module {
         if (!waitingForCurrencyMenu) return;
         if (!title.contains("Wager")) return;
 
+        String finalTitle = title;
         new Thread(() -> {
             try {
                 Thread.sleep(200);
@@ -112,7 +115,6 @@ public class CoinFlip extends Module {
             }
         }
 
-        // Debug - couldn't find the slot
         if (mc.player != null) {
             mc.player.displayClientMessage(
                 Component.literal("§cCouldn't find slot for: " + target), false
