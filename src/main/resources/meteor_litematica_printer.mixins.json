@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "com.kkllffaa.meteor_litematica_printer",
+  "package": "com.kkllffaa.meteor_litematica_printer.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "MixinServerPlayer"
@@ -9,3 +9,8 @@
     "defaultRequire": 1
   }
 }
+```
+
+This time you **must** create the mixin folder. On GitHub when creating the file type the full path:
+```
+src/main/java/com/kkllffaa/meteor_litematica_printer/mixin/MixinServerPlayer.java
