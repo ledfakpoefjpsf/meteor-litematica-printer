@@ -25,6 +25,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new FastBridgeMacro());
         Modules.get().add(new PlayerJumpTP());
         Modules.get().add(new CoinFlip());
+        Modules.get().add(new CoinFlipSniper());
     }
 
     @Override
