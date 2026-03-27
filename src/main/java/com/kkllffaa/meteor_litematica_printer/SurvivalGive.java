@@ -4,7 +4,6 @@ import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.settings.StringSetting;
-import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -31,7 +30,7 @@ public class SurvivalGive extends Module {
     );
 
     public SurvivalGive() {
-        super(Categories.Player, "survival-give", "Spawn items in singleplayer by writing to server inventory.");
+        super(Addon.CATEGORY, "survival-give", "Spawn items in singleplayer by writing to server inventory.");
     }
 
     @Override
