@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 
 public class SpectatorModule extends Module {
@@ -22,12 +23,14 @@ public class SpectatorModule extends Module {
         if (player == null) return;
         if (!player.isSpectator()) return;
 
+        GuiGraphics graphics = event.drawContext;
+
         int x = 5;
         int y = 5;
         for (int i = 3; i >= 0; i--) {
             ItemStack armor = player.getInventory().armor.get(i);
             if (!armor.isEmpty()) {
-                mc.gameRenderer.itemRenderer.renderGuiItem(armor, x, y);
+                graphics.renderItem(armor, x, y);
                 x += 20;
             }
         }
