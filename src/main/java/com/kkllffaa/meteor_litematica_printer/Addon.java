@@ -22,6 +22,9 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new Fly());
         Modules.get().add(new EnchantAny());
         Modules.get().add(new KeepInventory());
+
+        // Command module
+        Modules.get().add(new SingleplayerCommand());
     }
 
     @Override
