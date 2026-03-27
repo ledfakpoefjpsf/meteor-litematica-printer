@@ -7,6 +7,9 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class SurvivalGive extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -14,6 +17,11 @@ public class SurvivalGive extends Module {
         .name("item")
         .description("Item ID to give (e.g. minecraft:diamond_sword)")
         .defaultValue("minecraft:diamond")
+        .suggestions(() -> BuiltInRegistries.ITEM.keySet()
+            .stream()
+            .map(ResourceLocation::toString)
+            .sorted()
+            .collect(Collectors.toList()))
         .build()
     );
 
