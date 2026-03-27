@@ -44,7 +44,7 @@ public class SurvivalGive extends Module {
             return;
         }
 
-        Item item = BuiltInRegistries.ITEM.get(id).orElseThrow();
+        Item item = BuiltInRegistries.ITEM.get(id).orElseThrow().value();
         ItemStack stack = new ItemStack(item, countSetting.get());
 
         boolean inserted = mc.player.getInventory().add(stack);
