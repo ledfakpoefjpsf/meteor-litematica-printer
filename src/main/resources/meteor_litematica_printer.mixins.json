@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "com.kkllffaa.meteor_litematica_printer",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MixinServerPlayer"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
