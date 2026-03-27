@@ -1,10 +1,17 @@
 package com.kkllffaa.meteor_litematica_printer;
 
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,14 +20,14 @@ public class CoinFlipSniper extends Module {
 
     private final Setting<String> minAmountSetting = sgGeneral.add(new StringSetting.Builder()
         .name("min-amount")
-        .description("Minimum amount to snipe e.g. $10K, $1M, 2 GC")
+        .description("Minimum amount to snipe e.g. $10K, $1M")
         .defaultValue("$10K")
         .build()
     );
 
     private final Setting<String> maxAmountSetting = sgGeneral.add(new StringSetting.Builder()
         .name("max-amount")
-        .description("Maximum amount to snipe e.g. $1M, $10M, 5 GC")
+        .description("Maximum amount to snipe e.g. $1M, $10M")
         .defaultValue("$1M")
         .build()
     );
@@ -32,13 +39,15 @@ public class CoinFlipSniper extends Module {
         .build()
     );
 
-    // Pattern to match: [Rank] PlayerName made a Coinflip for: $10K or 2 GC
     private static final Pattern CF_PATTERN = Pattern.compile(
         "\\(/cf\\).*?(\\w+) made a.*?Coinflip.*?for: (.+)"
     );
 
+    private String pendingTarget = null;
+    private boolean waitingForConfirm = false;
+
     public CoinFlipSniper() {
-        super(Addon.CATEGORY, "coinflip-sniper", "Auto-accepts coinflips in chat within your set range.");
+        super(Addon.CATEGORY, "coinflip-sniper", "Auto-snipes coinflips in the /cf menu.");
     }
 
     @EventHandler
@@ -57,7 +66,7 @@ public class CoinFlipSniper extends Module {
         // Skip our own flips
         if (playerName.equalsIgnoreCase(mc.player.getName().getString())) return;
 
-        // Check if it matches GC mode setting
+        // Check GC vs $ mode
         boolean isGC = !amountStr.startsWith("$");
         if (isGC != gcMode.get()) return;
 
@@ -67,11 +76,122 @@ public class CoinFlipSniper extends Module {
 
         if (amount < min || amount > max) return;
 
-        // Accept the flip!
-        mc.getConnection().sendCommand("cf accept " + playerName);
+        // Store target and open /cf menu
+        pendingTarget = playerName;
+        waitingForConfirm = false;
         mc.player.displayClientMessage(Component.literal(
-            "§aSniped §e" + playerName + "§a's coinflip for §e" + amountStr
+            "§aSniping §e" + playerName + "§a's flip for §e" + amountStr
         ), false);
+
+        // Small delay then open the menu
+        new Thread(() -> {
+            try {
+                Thread.sleep(300);
+                mc.execute(() -> mc.getConnection().sendCommand("cf"));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    @EventHandler
+    private void onPacket(PacketEvent.Receive event) {
+        if (!(event.packet instanceof ClientboundOpenScreenPacket packet)) return;
+        String title = packet.getTitle().getString();
+
+        if (title.equals("Active Coinflips") && pendingTarget != null) {
+            // Wait a tick then scan for the target's head
+            new Thread(() -> {
+                try {
+                    Thread.sleep(200);
+                    mc.execute(() -> clickTargetHead());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
+
+        if (title.equals("Confirm") && waitingForConfirm) {
+            // Wait a tick then click confirm
+            new Thread(() -> {
+                try {
+                    Thread.sleep(200);
+                    mc.execute(() -> clickConfirm());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
+    }
+
+    private void clickTargetHead() {
+        if (!(mc.screen instanceof AbstractContainerScreen<?> screen)) return;
+        if (pendingTarget == null) return;
+
+        var menu = screen.getMenu();
+        var slots = menu.slots;
+
+        for (int i = 0; i < slots.size(); i++) {
+            ItemStack stack = slots.get(i).getItem();
+            if (stack.isEmpty()) continue;
+
+            // Check tooltip for player name
+            List<Component> tooltip = stack.getTooltipLines(
+                net.minecraft.world.item.Item.TooltipContext.EMPTY, null,
+                net.minecraft.world.item.TooltipFlag.NORMAL
+            );
+
+            for (Component line : tooltip) {
+                if (line.getString().contains(pendingTarget)) {
+                    // Click this slot
+                    mc.gameMode.handleInventoryMouseClick(
+                        menu.containerId, i, 0, 
+                        net.minecraft.world.inventory.ClickType.PICKUP, 
+                        mc.player
+                    );
+                    waitingForConfirm = true;
+                    return;
+                }
+            }
+        }
+
+        mc.player.displayClientMessage(Component.literal(
+            "§cCouldn't find §e" + pendingTarget + "§c in the coinflip menu!"
+        ), false);
+        pendingTarget = null;
+    }
+
+    private void clickConfirm() {
+        if (!(mc.screen instanceof AbstractContainerScreen<?> screen)) return;
+
+        var menu = screen.getMenu();
+        var slots = menu.slots;
+
+        for (int i = 0; i < slots.size(); i++) {
+            ItemStack stack = slots.get(i).getItem();
+            if (stack.isEmpty()) continue;
+
+            List<Component> tooltip = stack.getTooltipLines(
+                net.minecraft.world.item.Item.TooltipContext.EMPTY, null,
+                net.minecraft.world.item.TooltipFlag.NORMAL
+            );
+
+            for (Component line : tooltip) {
+                if (line.getString().equalsIgnoreCase("Confirm")) {
+                    mc.gameMode.handleInventoryMouseClick(
+                        menu.containerId, i, 0,
+                        net.minecraft.world.inventory.ClickType.PICKUP,
+                        mc.player
+                    );
+                    mc.player.displayClientMessage(Component.literal(
+                        "§aCoinflip accepted!"
+                    ), false);
+                    pendingTarget = null;
+                    waitingForConfirm = false;
+                    return;
+                }
+            }
+        }
     }
 
     private long parseAmount(String input) {
