@@ -10,14 +10,17 @@ import org.apache.logging.log4j.Logger;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LogManager.getLogger();
-    public static final Category CATEGORY = new Category("Printer", new ItemStack(Items.PINK_CARPET));
+    public static final Category CATEGORY = new Category("Singleplayer", new ItemStack(Items.NETHER_STAR));
 
     @Override
     public void onInitialize() {
         LOG.info("Initializing litematica printer");
+
         Modules.get().add(new SurvivalGive());
         Modules.get().add(new SpectatorModule());
-        Modules.get().add(new GodMode()); // add this
+        Modules.get().add(new GodMode());
+        Modules.get().add(new Fly());
+        Modules.get().add(new EnchantAny());
     }
 
     @Override
