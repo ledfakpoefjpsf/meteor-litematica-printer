@@ -1,38 +1,57 @@
 package com.kkllffaa.meteor_litematica_printer;
 
-import meteordevelopment.meteorclient.events.render.Render2DEvent;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.CameraType;
+import net.minecraft.world.entity.player.Player;
+
+import java.util.List;
 
 public class SpectatorModule extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    private final Setting<String> targetSetting = sgGeneral.add(new StringSetting.Builder()
+        .name("target")
+        .description("Name of the player to spectate")
+        .defaultValue("")
+        .build()
+    );
+
     public SpectatorModule() {
-        super(Categories.Render, "spectator-module", "Show armor items on HUD in spectator mode.");
+        super(Categories.Player, "spectator-module", "Lock your camera to another player's perspective.");
     }
 
-    @EventHandler
-    private void onRender2D(Render2DEvent event) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) return;
-        if (!player.isSpectator()) return;
+    @Override
+    public void onActivate() {
+        if (mc.level == null) return;
 
-        GuiGraphics graphics = event.drawContext;
+        String target = targetSetting.get().trim();
+        if (target.isEmpty()) {
+            info("Please set a target player name.");
+            toggle();
+            return;
+        }
 
-        int x = 5;
-        int y = 5;
-        for (int i = 3; i >= 0; i--) {
-            ItemStack armor = player.getInventory().armor.get(i);
-            if (!armor.isEmpty()) {
-                graphics.renderItem(armor, x, y);
-                x += 20;
-            }
+        Player targetPlayer = mc.level.players().stream()
+            .filter(p -> p.getName().getString().equalsIgnoreCase(target))
+            .findFirst()
+            .orElse(null);
+
+        if (targetPlayer == null) {
+            info("Player not found: " + target);
+            toggle();
+            return;
+        }
+
+        mc.setCameraEntity(targetPlayer);
+    }
+
+    @Override
+    public void onDeactivate() {
+        // Reset camera back to yourself
+        if (mc.player != null) {
+            mc.setCameraEntity(mc.player);
         }
     }
 }
