@@ -59,11 +59,13 @@ public class SurvivalGive extends Module {
             var sp = server.getPlayerList().getPlayer(uuid);
             if (sp == null) return;
 
-            var item = BuiltInRegistries.ITEM.get(id);
-            var stack = new ItemStack(item, count);
+            var itemHolder = BuiltInRegistries.ITEM.get(id).orElse(null);
+            if (itemHolder == null) return;
+
+            var stack = new ItemStack(itemHolder, count);
 
             boolean added = sp.getInventory().add(stack);
-            if (!added) sp.drop(stack, false); // inventory full -> drop at player
+            if (!added) sp.drop(stack, false);
             sp.containerMenu.broadcastChanges();
         });
 
