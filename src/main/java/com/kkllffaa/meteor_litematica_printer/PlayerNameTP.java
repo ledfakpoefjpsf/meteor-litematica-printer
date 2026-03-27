@@ -56,9 +56,9 @@ public class PlayerNameTP extends Module {
         // Client-side snap
         mc.player.setPos(x, y, z);
 
-        // Tell server new position
+        // Tell server new position (5-arg constructor for your mappings/version)
         mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(
-            x, y, z, mc.player.onGround()
+            x, y, z, mc.player.onGround(), false
         ));
 
         info("Attempted snap to " + name + ".");
