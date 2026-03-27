@@ -2,7 +2,6 @@ package com.kkllffaa.meteor_litematica_printer;
 
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.chat.Component;
@@ -22,7 +21,7 @@ public class CoinFlip extends Module {
     private int totalLosses = 0;
 
     public CoinFlip() {
-        super(Categories.Player, "coinflip", "Sends /cf in chat and tracks your win streak.");
+        super(Addon.CATEGORY, "coinflip", "Sends /cf in chat and tracks your win streak.");
     }
 
     @Override
