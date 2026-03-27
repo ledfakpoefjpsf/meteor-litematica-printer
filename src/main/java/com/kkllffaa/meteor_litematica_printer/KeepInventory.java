@@ -6,7 +6,7 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.GameRules;
 
 public class KeepInventory extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -34,29 +34,21 @@ public class KeepInventory extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        // Keep it enforced in case anything changes it.
-        setKeepInventory(true);
+        setKeepInventory(true); // enforce silently
     }
 
     private void setKeepInventory(boolean value) {
-        if (mc.player == null) return;
+        if (mc.getSingleplayerServer() == null) return;
 
         var server = mc.getSingleplayerServer();
-        if (server == null) return; // silently ignore outside singleplayer
-
         server.execute(() -> {
             var level = server.overworld();
             if (level == null) return;
 
-            var gameRules = level.getGameRules();
-            gameRules.getRule(net.minecraft.world.level.GameRules.RULE_KEEPINVENTORY).set(value, server);
+            var rule = level.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY);
+            if (rule.get() != value) {
+                rule.set(value, server);
+            }
         });
-
-        if (mc.player != null) {
-            mc.player.displayClientMessage(
-                Component.literal(value ? "§akeepInventory enabled." : "§ekeepInventory disabled."),
-                false
-            );
-        }
     }
 }
