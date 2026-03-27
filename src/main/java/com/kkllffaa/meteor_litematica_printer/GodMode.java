@@ -4,7 +4,6 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
-import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.chat.Component;
@@ -28,7 +27,7 @@ public class GodMode extends Module {
     );
 
     public GodMode() {
-        super(Categories.Player, "god-mode", "Singleplayer invulnerability (Integrated Server only).");
+        super(Addon.CATEGORY, "god-mode", "Singleplayer invulnerability (Integrated Server only).");
     }
 
     @Override
@@ -58,29 +57,24 @@ public class GodMode extends Module {
         var server = mc.getSingleplayerServer();
         var uuid = mc.player.getUUID();
 
-        // Run on the server thread to ensure it sticks
         server.execute(() -> {
             ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
             if (sp == null) return;
 
-            // 1. Force Invulnerability
             if (sp.getAbilities().invulnerable != state) {
                 sp.getAbilities().invulnerable = state;
-                sp.onUpdateAbilities(); // This sends the packet to the client
+                sp.onUpdateAbilities();
             }
 
             if (state) {
-                // 2. Health and Air
                 sp.setHealth(sp.getMaxHealth());
                 sp.setAirSupply(sp.getMaxAirSupply());
 
-                // 3. Hunger
                 if (refillHunger.get()) {
                     sp.getFoodData().setFoodLevel(20);
                     sp.getFoodData().setSaturation(20.0f);
                 }
 
-                // 4. Fire and Effects
                 if (extinguishFire.get()) {
                     sp.clearFire();
                     sp.setTicksFrozen(0);
