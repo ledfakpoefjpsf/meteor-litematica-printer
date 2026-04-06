@@ -26,6 +26,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new PlayerJumpTP());
         Modules.get().add(new CoinFlip());
         Modules.get().add(new CoinFlipSniper());
+        Modules.get().add(new AntiAFK());
     }
 
     @Override
