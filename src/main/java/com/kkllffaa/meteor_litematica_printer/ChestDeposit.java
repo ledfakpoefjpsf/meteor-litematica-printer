@@ -29,84 +29,55 @@ public class ChestDeposit extends Module {
         .build()
     );
 
-    private final Setting<Integer> delaySetting = sgGeneral.add(new IntSetting.Builder()
-        .name("delay-ticks")
-        .description("Ticks between each deposit")
-        .defaultValue(2)
-        .min(1)
-        .sliderMax(20)
-        .build()
-    );
-
-    private boolean depositing = false;
-    private int currentSlot = 0;
-    private int tickDelay = 0;
     private String lastTitle = "";
+    private boolean done = false;
 
     public ChestDeposit() {
-        super(Addon.CATEGORY, "chest-deposit", "Auto deposits selected items into any chest you open.");
+        super(Addon.CATEGORY, "chest-deposit", "Instantly deposits selected items into any chest you open.");
     }
 
     @Override
     public void onActivate() {
-        depositing = false;
-        currentSlot = 0;
-        tickDelay = 0;
         lastTitle = "";
+        done = false;
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
         if (!(mc.screen instanceof AbstractContainerScreen<?> screen)) {
-            if (depositing) {
-                depositing = false;
-                currentSlot = 0;
-            }
+            lastTitle = "";
+            done = false;
             return;
         }
 
         String title = screen.getTitle().getString();
-
         if (!title.equals(lastTitle)) {
             lastTitle = title;
-            depositing = true;
-            currentSlot = 0;
-            tickDelay = 0;
+            done = false;
         }
 
-        if (!depositing) return;
-
-        tickDelay++;
-        if (tickDelay < delaySetting.get()) return;
-        tickDelay = 0;
+        if (done) return;
+        done = true;
 
         var slots = screen.getMenu().slots;
         int chestSize = slots.size() - 36;
 
-        while (currentSlot < slots.size()) {
-            if (currentSlot < chestSize) {
-                currentSlot++;
-                continue;
-            }
-
-            ItemStack stack = slots.get(currentSlot).getItem();
+        // Scan player inventory slots only
+        for (int i = chestSize; i < slots.size(); i++) {
+            ItemStack stack = slots.get(i).getItem();
             if (!stack.isEmpty() && shouldDeposit(stack)) {
                 mc.gameMode.handleInventoryMouseClick(
                     screen.getMenu().containerId,
-                    currentSlot, 0,
+                    i, 0,
                     ClickType.QUICK_MOVE,
                     mc.player
                 );
-                currentSlot++;
-                return;
             }
-            currentSlot++;
         }
 
-        depositing = false;
         if (mc.player != null) {
             mc.player.displayClientMessage(
-                Component.literal("§aDeposit finished!"), false
+                Component.literal("§aDeposit done!"), false
             );
         }
     }
