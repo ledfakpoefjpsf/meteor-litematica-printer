@@ -32,6 +32,8 @@ public class MentionAlert extends Module {
         .build()
     );
 
+    private boolean handling = false;
+
     public MentionAlert() {
         super(Addon.CATEGORY, "mention-alert", "Alerts you when your name is mentioned in chat.");
     }
@@ -39,8 +41,13 @@ public class MentionAlert extends Module {
     @EventHandler
     private void onReceiveMessage(ReceiveMessageEvent event) {
         if (mc.player == null) return;
+        if (handling) return; // prevent infinite loop
 
         String msg = event.getMessage().getString();
+
+        // Ignore our own alert messages
+        if (msg.contains("[MentionAlert]")) return;
+
         String playerName = mc.player.getName().getString().toLowerCase();
         boolean mentioned = msg.toLowerCase().contains(playerName);
 
@@ -54,6 +61,8 @@ public class MentionAlert extends Module {
         }
 
         if (!mentioned) return;
+
+        handling = true;
 
         mc.player.displayClientMessage(
             Component.literal("§c[MentionAlert] §fYou were mentioned: §e" + msg), false
@@ -76,7 +85,7 @@ public class MentionAlert extends Module {
                         Thread.sleep(index * 500L);
                         mc.execute(() -> {
                             if (mc.getWindow() != null) {
-                                mc.getWindow().setTitle("§c*** YOU WERE MENTIONED ***");
+                                mc.getWindow().setTitle("*** YOU WERE MENTIONED ***");
                             }
                         });
                         Thread.sleep(250);
@@ -91,5 +100,7 @@ public class MentionAlert extends Module {
                 }).start();
             }
         }
+
+        handling = false;
     }
 }
