@@ -1,12 +1,10 @@
 package com.kkllffaa.meteor_litematica_printer;
 
-import meteordevelopment.meteorclient.events.game.OpenScreenEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.screens.inventory.ChestScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
@@ -31,21 +29,30 @@ public class ChestStealer extends Module {
         super(Addon.CATEGORY, "chest-stealer", "Automatically takes all items from a chest when opened.");
     }
 
-    @EventHandler
-    private void onOpenScreen(OpenScreenEvent event) {
-        if (event.screen instanceof ChestScreen) {
-            stealing = true;
-            currentSlot = 0;
-            tickDelay = 0;
-        }
+    @Override
+    public void onActivate() {
+        stealing = false;
+        currentSlot = 0;
+        tickDelay = 0;
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (!stealing) return;
-        if (!(mc.screen instanceof ChestScreen screen)) {
-            stealing = false;
+        if (!(mc.screen instanceof AbstractContainerScreen<?> screen)) {
+            if (stealing) {
+                stealing = false;
+                currentSlot = 0;
+            }
             return;
+        }
+
+        String title = screen.getTitle().getString().toLowerCase();
+        if (!title.contains("chest") && !title.contains("container") && !title.contains("shulker")) return;
+
+        if (!stealing) {
+            stealing = true;
+            currentSlot = 0;
+            tickDelay = 0;
         }
 
         tickDelay++;
@@ -53,8 +60,6 @@ public class ChestStealer extends Module {
         tickDelay = 0;
 
         var slots = screen.getMenu().slots;
-
-        // Only steal from chest slots, not player inventory
         int chestSize = slots.size() - 36;
 
         while (currentSlot < chestSize) {
@@ -72,7 +77,6 @@ public class ChestStealer extends Module {
             currentSlot++;
         }
 
-        // Done stealing
         stealing = false;
         if (mc.player != null) {
             mc.player.displayClientMessage(
