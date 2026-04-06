@@ -59,14 +59,14 @@ public class CoinFlipSniper extends Module {
 
     private final Setting<String> lossRegex = sgGeneral.add(new StringSetting.Builder()
         .name("loss-regex")
-        .description("Regex for a loss line in chat (case-insensitive). Tune for your server.")
+        .description("Regex for a loss line in chat (case-insensitive).")
         .defaultValue("(?i).*(you lost|lost the coin|lost the flip).*")
         .build()
     );
 
     private final Setting<String> winRegex = sgGeneral.add(new StringSetting.Builder()
         .name("win-regex")
-        .description("Regex for a win; resets the loss streak. Empty = never reset from chat.")
+        .description("Regex for a win; resets the loss streak.")
         .defaultValue("(?i).*(you won|won the coin|won the flip).*")
         .build()
     );
@@ -121,7 +121,7 @@ public class CoinFlipSniper extends Module {
                     lossStreak = 0;
                     mc.execute(() -> {
                         msgFeedback("§cCoinflip Sniper disabled after " + cap + " losses.");
-                        disable();
+                        toggle();
                     });
                 }
                 return;
