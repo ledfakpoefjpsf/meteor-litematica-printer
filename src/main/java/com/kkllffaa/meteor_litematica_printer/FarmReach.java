@@ -2,15 +2,13 @@ package com.kkllffaa.meteor_litematica_printer;
 
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.events.entity.player.ReachEvent;
-import meteordevelopment.orbit.EventHandler;
 
 public class FarmReach extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
         .name("reach-range")
-        .description("How far you can reach blocks/crops. Server limit is usually ~5.5.")
+        .description("How far you can reach blocks/crops.")
         .defaultValue(5.0)
         .min(0)
         .sliderMax(10.0) 
@@ -18,13 +16,15 @@ public class FarmReach extends Module {
     );
 
     public FarmReach() {
-        // Uses the custom Category defined in your Addon class
         super(Addon.CATEGORY, "farm-reach", "Extends your reach for farming and block interaction.");
     }
 
-    @EventHandler
-    private void onReach(ReachEvent event) {
-        // Overrides the vanilla reach value with the slider value
-        event.reach = range.get().floatValue();
+    /**
+     * This is the built-in Meteor method for modifying reach.
+     * It overrides the vanilla reach distance automatically.
+     */
+    @Override
+    public double getReachDistance() {
+        return isActive() ? range.get() : super.getReachDistance();
     }
 }
