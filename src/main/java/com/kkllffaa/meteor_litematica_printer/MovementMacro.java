@@ -87,12 +87,12 @@ public class MovementMacro extends Module {
         Options o = mc.options;
 
         frames.add(new Frame(
-            o.forwardKey.isDown(),
-            o.backKey.isDown(),
-            o.leftKey.isDown(),
-            o.rightKey.isDown(),
-            o.jumpKey.isDown(),
-            o.sneakKey.isDown(),
+            o.forward.isPressed(),
+            o.back.isPressed(),
+            o.left.isPressed(),
+            o.right.isPressed(),
+            o.jump.isPressed(),
+            o.sneak.isPressed(),
             mc.player.isSprinting()
         ));
     }
@@ -101,13 +101,13 @@ public class MovementMacro extends Module {
     private void playFrame(Frame f) {
         Options o = mc.options;
 
-        o.forwardKey.setDown(f.forward);
-        o.backKey.setDown(f.backward);
-        o.leftKey.setDown(f.left);
-        o.rightKey.setDown(f.right);
+        o.forward.setPressed(f.forward);
+        o.back.setPressed(f.backward);
+        o.left.setPressed(f.left);
+        o.right.setPressed(f.right);
 
-        o.jumpKey.setDown(f.jump);
-        o.sneakKey.setDown(f.sneak);
+        o.jump.setPressed(f.jump);
+        o.sneak.setPressed(f.sneak);
 
         mc.player.setSprinting(f.sprint);
     }
@@ -116,13 +116,13 @@ public class MovementMacro extends Module {
     private void resetKeys() {
         Options o = mc.options;
 
-        o.forwardKey.setDown(false);
-        o.backKey.setDown(false);
-        o.leftKey.setDown(false);
-        o.rightKey.setDown(false);
+        o.forward.setPressed(false);
+        o.back.setPressed(false);
+        o.left.setPressed(false);
+        o.right.setPressed(false);
 
-        o.jumpKey.setDown(false);
-        o.sneakKey.setDown(false);
+        o.jump.setPressed(false);
+        o.sneak.setPressed(false);
 
         mc.player.setSprinting(false);
     }
