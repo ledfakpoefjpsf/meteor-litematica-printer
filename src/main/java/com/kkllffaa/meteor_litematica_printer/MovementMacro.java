@@ -3,6 +3,7 @@ package com.kkllffaa.meteor_litematica_printer;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.misc.Keybind; // Added for keybind support
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -17,6 +18,14 @@ public class MovementMacro extends Module {
         .name("recording")
         .description("Turn on to record, turn off to stop and save")
         .defaultValue(false)
+        .build()
+    );
+
+    // --- Added Keybind Setting ---
+    private final Setting<Keybind> recordKey = sgGeneral.add(new KeybindSetting.Builder()
+        .name("record-keybind")
+        .description("The key used to toggle recording on/off.")
+        .defaultValue(Keybind.none())
         .build()
     );
 
@@ -59,6 +68,7 @@ public class MovementMacro extends Module {
     private boolean playing = false;
     private int playIndex = 0;
     private int repeatCount = 0;
+    private boolean lastKeyStatus = false; // Prevents spamming the toggle while holding the key
 
     public MovementMacro() {
         super(Addon.CATEGORY, "movement-macro", "Record your movements and play them back on repeat.");
@@ -70,10 +80,11 @@ public class MovementMacro extends Module {
         playIndex = 0;
         repeatCount = 0;
         wasRecording = false;
+        lastKeyStatus = false;
 
         if (mc.player != null) {
             mc.player.displayClientMessage(
-                Component.literal("§e[Macro] §fTurn on §aRecording §fto start recording. Turn it off to begin playback."), false
+                Component.literal("§e[Macro] §fPress your §aKeybind §for toggle §aRecording §fto start."), false
             );
         }
     }
@@ -81,12 +92,21 @@ public class MovementMacro extends Module {
     @Override
     public void onDeactivate() {
         playing = false;
+        recordingSetting.set(false); // Reset recording checkbox if module is disabled
         restoreInputs();
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
         if (mc.player == null) return;
+
+        // --- Keybind Logic ---
+        boolean isKeyPressed = recordKey.get().isPressed();
+        if (isKeyPressed && !lastKeyStatus) {
+            // This flips the boolean setting when the key is pressed down
+            recordingSetting.set(!recordingSetting.get()); 
+        }
+        lastKeyStatus = isKeyPressed;
 
         boolean isRecording = recordingSetting.get();
 
@@ -159,7 +179,6 @@ public class MovementMacro extends Module {
     }
 
     private void applyFrame(LocalPlayer player, Frame frame) {
-
         var options = mc.options;
 
         options.keyUp.setDown(frame.forward);
@@ -176,7 +195,6 @@ public class MovementMacro extends Module {
     }
 
     private void restoreInputs() {
-
         if (mc.options == null) return;
 
         var options = mc.options;
@@ -185,7 +203,6 @@ public class MovementMacro extends Module {
         options.keyDown.setDown(false);
         options.keyLeft.setDown(false);
         options.keyRight.setDown(false);
-
 
         options.keyJump.setDown(false);
         options.keyShift.setDown(false);
