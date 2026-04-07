@@ -155,18 +155,13 @@ public class MovementMacro extends Module {
         var input = player.input;
         if (input == null) return;
 
-        // Correct mappings for 1.21.4
-        input.pressingForward = frame.forward;
-        input.pressingBackward = frame.backward;
-        input.pressingLeft = frame.left;
-        input.pressingRight = frame.right;
+        // ✅ 1.21.4 correct movement system
+        input.forwardImpulse = frame.forward ? 1.0F : (frame.backward ? -1.0F : 0.0F);
+        input.leftImpulse = frame.left ? 1.0F : (frame.right ? -1.0F : 0.0F);
+
         input.jumping = frame.jump;
         input.shiftKeyDown = frame.sneak;
 
-        // Impulse values are necessary for movement in 1.21+
-        input.forwardImpulse = frame.forward ? 1.0F : (frame.backward ? -1.0F : 0.0F);
-        input.leftImpulse = frame.left ? 1.0F : (frame.right ? -1.0F : 0.0F);
-        
         player.setSprinting(frame.sprint);
         player.setYRot(frame.yaw);
         player.setXRot(frame.pitch);
@@ -176,13 +171,9 @@ public class MovementMacro extends Module {
         if (mc.player == null || mc.player.input == null) return;
         var input = mc.player.input;
 
-        input.pressingForward = false;
-        input.pressingBackward = false;
-        input.pressingLeft = false;
-        input.pressingRight = false;
-        input.jumping = false;
-        input.shiftKeyDown = false;
         input.forwardImpulse = 0.0F;
         input.leftImpulse = 0.0F;
+        input.jumping = false;
+        input.shiftKeyDown = false;
     }
 }
