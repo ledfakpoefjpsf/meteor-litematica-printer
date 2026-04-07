@@ -36,7 +36,6 @@ public class MovementMacro extends Module {
         .build()
     );
 
-    // Snapshot of one tick of inputs
     private static class Frame {
         boolean forward, backward, left, right, jump, sneak, sprint;
         float yaw, pitch;
@@ -91,7 +90,6 @@ public class MovementMacro extends Module {
 
         boolean isRecording = recordingSetting.get();
 
-        // Just started recording
         if (isRecording && !wasRecording) {
             recorded.clear();
             playing = false;
@@ -101,26 +99,29 @@ public class MovementMacro extends Module {
             );
         }
 
-        // Just stopped recording
         if (!isRecording && wasRecording) {
             wasRecording = false;
+
             if (recorded.isEmpty()) {
                 mc.player.displayClientMessage(
                     Component.literal("§c[Macro] §fNothing recorded!"), false
                 );
                 return;
             }
+
             mc.player.displayClientMessage(
                 Component.literal("§a[Macro] §fRecorded §e" + recorded.size() + " §fticks! Starting playback..."), false
             );
+
             playing = true;
             playIndex = 0;
             repeatCount = 0;
         }
 
-        // Record current frame
+        // RECORDING
         if (isRecording) {
             var options = mc.options;
+
             recorded.add(new Frame(
                 options.keyUp.isDown(),
                 options.keyDown.isDown(),
@@ -135,7 +136,7 @@ public class MovementMacro extends Module {
             return;
         }
 
-        // Playback
+        // PLAYBACK
         if (!playing || recorded.isEmpty()) return;
 
         Frame frame = recorded.get(playIndex);
@@ -149,6 +150,7 @@ public class MovementMacro extends Module {
             if (!loopSetting.get() && repeatCount >= repeatsSetting.get()) {
                 playing = false;
                 restoreInputs();
+
                 mc.player.displayClientMessage(
                     Component.literal("§a[Macro] §fPlayback finished!"), false
                 );
@@ -159,13 +161,22 @@ public class MovementMacro extends Module {
     private void applyFrame(LocalPlayer player, Frame frame) {
         var input = player.input;
         if (input == null) return;
+        var options = mc.options;
 
-        input.up = frame.forward;
-        input.down = frame.backward;
-        input.left = frame.left;
-        input.right = frame.right;
+        // ✅ 1.21.4 correct movement system
+        input.forwardImpulse = frame.forward ? 1.0F : (frame.backward ? -1.0F : 0.0F);
+        input.leftImpulse = frame.left ? 1.0F : (frame.right ? -1.0F : 0.0F);
+        options.keyUp.setDown(frame.forward);
+        options.keyDown.setDown(frame.backward);
+        options.keyLeft.setDown(frame.left);
+        options.keyRight.setDown(frame.right);
+
         input.jumping = frame.jump;
         input.shiftKeyDown = frame.sneak;
+        options.keyJump.setDown(frame.jump);
+        options.keyShift.setDown(frame.sneak);
+        options.keySprint.setDown(frame.sprint);
+
         player.setSprinting(frame.sprint);
         player.setYRot(frame.yaw);
         player.setXRot(frame.pitch);
@@ -173,11 +184,22 @@ public class MovementMacro extends Module {
 
     private void restoreInputs() {
         if (mc.player == null || mc.player.input == null) return;
-        mc.player.input.up = false;
-        mc.player.input.down = false;
-        mc.player.input.left = false;
-        mc.player.input.right = false;
-        mc.player.input.jumping = false;
-        mc.player.input.shiftKeyDown = false;
+        var input = mc.player.input;
+        if (mc.options == null) return;
+
+        var options = mc.options;
+
+        options.keyUp.setDown(false);
+        options.keyDown.setDown(false);
+        options.keyLeft.setDown(false);
+        options.keyRight.setDown(false);
+
+        input.forwardImpulse = 0.0F;
+        input.leftImpulse = 0.0F;
+        input.jumping = false;
+        input.shiftKeyDown = false;
+        options.keyJump.setDown(false);
+        options.keyShift.setDown(false);
+        options.keySprint.setDown(false);
     }
 }
