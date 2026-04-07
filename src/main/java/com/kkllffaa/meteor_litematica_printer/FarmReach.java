@@ -19,12 +19,9 @@ public class FarmReach extends Module {
         super(Addon.CATEGORY, "farm-reach", "Extends your reach for farming and block interaction.");
     }
 
-    /**
-     * This is the built-in Meteor method for modifying reach.
-     * It overrides the vanilla reach distance automatically.
-     */
-    @Override
-    public double getReachDistance() {
-        return isActive() ? range.get() : super.getReachDistance();
+    // Since getReachDistance is missing, we use this to tell the game 
+    // the reach range. Note: If this still fails, your version requires a Mixin.
+    public float getReach() {
+        return isActive() ? range.get().floatValue() : 4.5f;
     }
 }
