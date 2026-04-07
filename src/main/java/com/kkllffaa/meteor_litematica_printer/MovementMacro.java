@@ -160,12 +160,14 @@ public class MovementMacro extends Module {
         var input = player.input;
         if (input == null) return;
 
-        input.up = frame.forward;
-        input.down = frame.backward;
-        input.left = frame.left;
-        input.right = frame.right;
+        // Updated for modern Mojang mappings
+        input.pressingForward = frame.forward;
+        input.pressingBack = frame.backward;
+        input.pressingLeft = frame.left;
+        input.pressingRight = frame.right;
         input.jumping = frame.jump;
-        input.shiftKeyDown = frame.sneak;
+        input.sneaking = frame.sneak;
+        
         player.setSprinting(frame.sprint);
         player.setYRot(frame.yaw);
         player.setXRot(frame.pitch);
@@ -173,11 +175,13 @@ public class MovementMacro extends Module {
 
     private void restoreInputs() {
         if (mc.player == null || mc.player.input == null) return;
-        mc.player.input.up = false;
-        mc.player.input.down = false;
-        mc.player.input.left = false;
-        mc.player.input.right = false;
+        
+        // Updated for modern Mojang mappings
+        mc.player.input.pressingForward = false;
+        mc.player.input.pressingBack = false;
+        mc.player.input.pressingLeft = false;
+        mc.player.input.pressingRight = false;
         mc.player.input.jumping = false;
-        mc.player.input.shiftKeyDown = false;
+        mc.player.input.sneaking = false;
     }
 }
