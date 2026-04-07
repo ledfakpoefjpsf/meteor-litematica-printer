@@ -6,7 +6,7 @@ import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 
-import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.Options;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +72,7 @@ public class MovementMacro extends Module {
             isRecording = recordingSetting.get();
         }
 
-        // START RECORDING
+        // RECORDING
         if (isRecording) {
             recordFrame();
             wasRecording = true;
@@ -94,9 +94,9 @@ public class MovementMacro extends Module {
         }
     }
 
-    // RECORD
+    // RECORD FRAME
     private void recordFrame() {
-        GameOptions o = mc.options;
+        Options o = mc.options;
 
         frames.add(new Frame(
             o.keyForward.isPressed(),
@@ -109,9 +109,9 @@ public class MovementMacro extends Module {
         ));
     }
 
-    // PLAY
+    // PLAY FRAME
     private void playFrame(Frame f) {
-        GameOptions o = mc.options;
+        Options o = mc.options;
 
         o.keyForward.setPressed(f.forward);
         o.keyBack.setPressed(f.backward);
@@ -124,9 +124,9 @@ public class MovementMacro extends Module {
         mc.player.setSprinting(f.sprint);
     }
 
-    // RESET
+    // RESET KEYS
     private void resetKeys() {
-        GameOptions o = mc.options;
+        Options o = mc.options;
 
         o.keyForward.setPressed(false);
         o.keyBack.setPressed(false);
