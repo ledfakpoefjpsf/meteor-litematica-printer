@@ -27,6 +27,8 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new ChestDeposit());
         Modules.get().add(new FishCounter());
         Modules.get().add(new MovementMacro());
+        Modules.get().add(new Phase());
+        Modules.get().add(new FightBot());
     }
 
     @Override
