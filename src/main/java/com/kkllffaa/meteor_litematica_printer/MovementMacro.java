@@ -4,6 +4,7 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.meteorclient.utils.misc.Keybind;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 
@@ -15,24 +16,43 @@ public class MovementMacro extends Module {
 
     private final Setting<Boolean> recordingSetting = sgGeneral.add(new BoolSetting.Builder()
         .name("recording")
-        .description("Turn on to record, turn off to stop and save")
+        .description("Manual recording toggle")
         .defaultValue(false)
         .build()
     );
 
     private final Setting<Boolean> loopSetting = sgGeneral.add(new BoolSetting.Builder()
         .name("loop")
-        .description("Loop the macro continuously")
         .defaultValue(true)
         .build()
     );
 
     private final Setting<Integer> repeatsSetting = sgGeneral.add(new IntSetting.Builder()
         .name("repeats")
-        .description("How many times to repeat if loop is off")
         .defaultValue(1)
         .min(1)
         .sliderMax(100)
+        .build()
+    );
+
+    // 🔥 NEW KEYBINDS
+    private final Setting<Keybind> recordToggleKey = sgGeneral.add(new KeybindSetting.Builder()
+        .name("record-toggle-key")
+        .description("Press to toggle recording on/off")
+        .defaultValue(Keybind.none())
+        .build()
+    );
+
+    private final Setting<Keybind> holdRecordKey = sgGeneral.add(new KeybindSetting.Builder()
+        .name("hold-record-key")
+        .description("Hold to record movements")
+        .defaultValue(Keybind.none())
+        .build()
+    );
+
+    private final Setting<Boolean> useHoldMode = sgGeneral.add(new BoolSetting.Builder()
+        .name("use-hold-to-record")
+        .defaultValue(false)
         .build()
     );
 
@@ -61,7 +81,7 @@ public class MovementMacro extends Module {
     private int repeatCount = 0;
 
     public MovementMacro() {
-        super(Addon.CATEGORY, "movement-macro", "Record your movements and play them back on repeat.");
+        super(Addon.CATEGORY, "movement-macro", "Record and replay movement.");
     }
 
     @Override
@@ -70,12 +90,6 @@ public class MovementMacro extends Module {
         playIndex = 0;
         repeatCount = 0;
         wasRecording = false;
-
-        if (mc.player != null) {
-            mc.player.displayClientMessage(
-                Component.literal("§e[Macro] §fTurn on §aRecording §fto start recording. Turn it off to begin playback."), false
-            );
-        }
     }
 
     @Override
@@ -88,29 +102,52 @@ public class MovementMacro extends Module {
     private void onTick(TickEvent.Post event) {
         if (mc.player == null) return;
 
-        boolean isRecording = recordingSetting.get();
+        boolean isRecording;
 
+        // HOLD MODE
+        if (useHoldMode.get()) {
+            isRecording = holdRecordKey.get().isDown();
+        }
+        // TOGGLE MODE
+        else {
+            if (recordToggleKey.get().isPressed()) {
+                boolean newState = !recordingSetting.get();
+                recordingSetting.set(newState);
+
+                mc.player.displayClientMessage(
+                    Component.literal(newState ? "§c[Macro] Recording ON"
+                                               : "§a[Macro] Recording OFF"),
+                    false
+                );
+            }
+
+            isRecording = recordingSetting.get();
+        }
+
+        // START RECORDING
         if (isRecording && !wasRecording) {
             recorded.clear();
             playing = false;
             wasRecording = true;
+
             mc.player.displayClientMessage(
-                Component.literal("§c[Macro] §fRecording started!"), false
+                Component.literal("§c[Macro] Recording started!"), false
             );
         }
 
+        // STOP RECORDING → PLAYBACK
         if (!isRecording && wasRecording) {
             wasRecording = false;
 
             if (recorded.isEmpty()) {
                 mc.player.displayClientMessage(
-                    Component.literal("§c[Macro] §fNothing recorded!"), false
+                    Component.literal("§c[Macro] Nothing recorded!"), false
                 );
                 return;
             }
 
             mc.player.displayClientMessage(
-                Component.literal("§a[Macro] §fRecorded §e" + recorded.size() + " §fticks! Starting playback..."), false
+                Component.literal("§a[Macro] Recorded " + recorded.size() + " ticks! Playing..."), false
             );
 
             playing = true;
@@ -120,16 +157,16 @@ public class MovementMacro extends Module {
 
         // RECORDING
         if (isRecording) {
-            var options = mc.options;
+            var o = mc.options;
 
             recorded.add(new Frame(
-                options.keyUp.isDown(),
-                options.keyDown.isDown(),
-                options.keyLeft.isDown(),
-                options.keyRight.isDown(),
-                options.keyJump.isDown(),
-                options.keyShift.isDown(),
-                options.keySprint.isDown(),
+                o.forwardKey.isPressed(),
+                o.backKey.isPressed(),
+                o.leftKey.isPressed(),
+                o.rightKey.isPressed(),
+                o.jumpKey.isPressed(),
+                o.sneakKey.isPressed(),
+                o.sprintKey.isPressed(),
                 mc.player.getYRot(),
                 mc.player.getXRot()
             ));
@@ -139,8 +176,8 @@ public class MovementMacro extends Module {
         // PLAYBACK
         if (!playing || recorded.isEmpty()) return;
 
-        Frame frame = recorded.get(playIndex);
-        applyFrame(mc.player, frame);
+        Frame f = recorded.get(playIndex);
+        applyFrame(mc.player, f);
         playIndex++;
 
         if (playIndex >= recorded.size()) {
@@ -152,40 +189,39 @@ public class MovementMacro extends Module {
                 restoreInputs();
 
                 mc.player.displayClientMessage(
-                    Component.literal("§a[Macro] §fPlayback finished!"), false
+                    Component.literal("§a[Macro] Playback finished!"), false
                 );
             }
         }
     }
 
-    private void applyFrame(LocalPlayer player, Frame frame) {
-        var options = mc.options;
+    private void applyFrame(LocalPlayer player, Frame f) {
+        var o = mc.options;
 
-        options.keyUp.setDown(frame.forward);
-        options.keyDown.setDown(frame.backward);
-        options.keyLeft.setDown(frame.left);
-        options.keyRight.setDown(frame.right);
+        o.forwardKey.setDown(f.forward);
+        o.backKey.setDown(f.backward);
+        o.leftKey.setDown(f.left);
+        o.rightKey.setDown(f.right);
 
-        options.keyJump.setDown(frame.jump);
-        options.keyShift.setDown(frame.sneak);
-        options.keySprint.setDown(frame.sprint);
+        o.jumpKey.setDown(f.jump);
+        o.sneakKey.setDown(f.sneak);
+        o.sprintKey.setDown(f.sprint);
 
-        player.setYRot(frame.yaw);
-        player.setXRot(frame.pitch);
+        player.setYRot(f.yaw);
+        player.setXRot(f.pitch);
     }
 
     private void restoreInputs() {
         if (mc.options == null) return;
+        var o = mc.options;
 
-        var options = mc.options;
+        o.forwardKey.setDown(false);
+        o.backKey.setDown(false);
+        o.leftKey.setDown(false);
+        o.rightKey.setDown(false);
 
-        options.keyUp.setDown(false);
-        options.keyDown.setDown(false);
-        options.keyLeft.setDown(false);
-        options.keyRight.setDown(false);
-
-        options.keyJump.setDown(false);
-        options.keyShift.setDown(false);
-        options.keySprint.setDown(false);
+        o.jumpKey.setDown(false);
+        o.sneakKey.setDown(false);
+        o.sprintKey.setDown(false);
     }
 }
