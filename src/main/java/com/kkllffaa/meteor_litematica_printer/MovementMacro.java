@@ -3,6 +3,7 @@ package com.kkllffaa.meteor_litematica_printer;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Categories; // Added this import
 import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.player.LocalPlayer;
@@ -14,13 +15,10 @@ import java.util.List;
 public class MovementMacro extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    // --- Settings ---
-
     private final Setting<Boolean> recordingSetting = sgGeneral.add(new BoolSetting.Builder()
         .name("recording")
         .description("Manual toggle for recording.")
         .defaultValue(false)
-        .onChanged(v -> { if(!v) wasRecording = true; }) // Trigger stop logic when unticked manually
         .build()
     );
 
@@ -53,8 +51,6 @@ public class MovementMacro extends Module {
         .sliderMax(100)
         .build()
     );
-
-    // --- State ---
 
     private static class Frame {
         boolean forward, backward, left, right, jump, sneak, sprint;
@@ -105,22 +101,17 @@ public class MovementMacro extends Module {
     private void onTick(TickEvent.Post event) {
         if (mc.player == null) return;
 
-        // --- Keybind Logic ---
         boolean isKeyPressed = recordKey.get().isPressed();
         
         if (useHoldMode.get()) {
             recordingSetting.set(isKeyPressed);
-        } else {
-            // Toggle logic: only switch when the key is first pressed down
-            if (isKeyPressed && !lastKeyStatus) {
-                recordingSetting.set(!recordingSetting.get());
-            }
+        } else if (isKeyPressed && !lastKeyStatus) {
+            recordingSetting.set(!recordingSetting.get());
         }
         lastKeyStatus = isKeyPressed;
 
         boolean isRecording = recordingSetting.get();
 
-        // --- Start Recording Logic ---
         if (isRecording && !wasRecording) {
             recorded.clear();
             playing = false;
@@ -128,7 +119,6 @@ public class MovementMacro extends Module {
             mc.player.displayClientMessage(Component.literal("§c[Macro] §fRecording started!"), true);
         }
 
-        // --- Stop Recording Logic ---
         if (!isRecording && wasRecording) {
             wasRecording = false;
             if (recorded.isEmpty()) {
@@ -141,24 +131,22 @@ public class MovementMacro extends Module {
             }
         }
 
-        // --- Recording Action ---
         if (isRecording) {
-            var options = mc.options;
+            var o = mc.options;
             recorded.add(new Frame(
-                options.keyUp.isDown(),
-                options.keyDown.isDown(),
-                options.keyLeft.isDown(),
-                options.keyRight.isDown(),
-                options.keyJump.isDown(),
-                options.keyShift.isDown(),
-                options.keySprint.isDown(),
+                o.keyForward.isDown(),
+                o.keyBack.isDown(),
+                o.keyLeft.isDown(),
+                o.keyRight.isDown(),
+                o.keyJump.isDown(),
+                o.keySneak.isDown(),
+                o.keySprint.isDown(),
                 mc.player.getYRot(),
                 mc.player.getXRot()
             ));
             return;
         }
 
-        // --- Playback Action ---
         if (!playing || recorded.isEmpty()) return;
 
         Frame frame = recorded.get(playIndex);
@@ -181,12 +169,13 @@ public class MovementMacro extends Module {
         var input = player.input;
         if (input == null) return;
 
-        input.pressingForward = frame.forward;
-        input.pressingBackward = frame.backward;
-        input.pressingLeft = frame.left;
-        input.pressingRight = frame.right;
-        input.jumping = frame.jump;
-        input.shiftKeyDown = frame.sneak;
+        // Corrected 1.21.4 Input mappings
+        input.up = frame.forward;
+        input.down = frame.backward;
+        input.left = frame.left;
+        input.right = frame.right;
+        input.jump = frame.jump;
+        input.shift = frame.sneak;
 
         input.forwardImpulse = frame.forward ? 1.0F : (frame.backward ? -1.0F : 0.0F);
         input.leftImpulse = frame.left ? 1.0F : (frame.right ? -1.0F : 0.0F);
@@ -200,12 +189,12 @@ public class MovementMacro extends Module {
         if (mc.player == null || mc.player.input == null) return;
         var input = mc.player.input;
 
-        input.pressingForward = false;
-        input.pressingBackward = false;
-        input.pressingLeft = false;
-        input.pressingRight = false;
-        input.jumping = false;
-        input.shiftKeyDown = false;
+        input.up = false;
+        input.down = false;
+        input.left = false;
+        input.right = false;
+        input.jump = false;
+        input.shift = false;
         input.forwardImpulse = 0.0F;
         input.leftImpulse = 0.0F;
     }
