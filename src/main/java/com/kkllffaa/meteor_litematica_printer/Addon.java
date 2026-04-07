@@ -28,6 +28,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new ChestStealer());
         Modules.get().add(new ChestDeposit());
         Modules.get().add(new FishCounter());
+        Modules.get().add(new MovementMacro());
         
         // Swapping MovementMacro for FarmReach
         Modules.get().add(new FarmReach()); 
