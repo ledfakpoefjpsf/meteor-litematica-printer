@@ -15,9 +15,16 @@ import java.util.List;
 public class ChestDeposit extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    private final Setting<Boolean> depositAllSetting = sgGeneral.add(new BoolSetting.Builder()
+        .name("deposit-all")
+        .description("When ON, deposits every item in your inventory. When OFF, only deposits items from the list below.")
+        .defaultValue(false)
+        .build()
+    );
+
     private final Setting<List<String>> itemsSetting = sgGeneral.add(new StringListSetting.Builder()
         .name("items-to-deposit")
-        .description("List of item IDs to deposit (e.g. minecraft:cod, minecraft:salmon)")
+        .description("List of item IDs to deposit when deposit-all is OFF (e.g. minecraft:cod)")
         .defaultValue(List.of(
             "minecraft:cod",
             "minecraft:salmon",
@@ -33,7 +40,7 @@ public class ChestDeposit extends Module {
     private boolean done = false;
 
     public ChestDeposit() {
-        super(Addon.CATEGORY, "chest-deposit", "Instantly deposits selected items into any chest you open.");
+        super(Addon.CATEGORY, "chest-deposit", "Instantly deposits items into any chest you open.");
     }
 
     @Override
@@ -62,7 +69,6 @@ public class ChestDeposit extends Module {
         var slots = screen.getMenu().slots;
         int chestSize = slots.size() - 36;
 
-        // Scan player inventory slots only
         for (int i = chestSize; i < slots.size(); i++) {
             ItemStack stack = slots.get(i).getItem();
             if (!stack.isEmpty() && shouldDeposit(stack)) {
@@ -83,9 +89,12 @@ public class ChestDeposit extends Module {
     }
 
     private boolean shouldDeposit(ItemStack stack) {
+        if (depositAllSetting.get()) return true;
+
         var id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         if (id == null) return false;
         String idStr = id.toString();
+
         for (String item : itemsSetting.get()) {
             if (item.trim().equalsIgnoreCase(idStr)) return true;
         }
